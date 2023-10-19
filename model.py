@@ -99,32 +99,6 @@ class EconClassGrid(mesa.space.SingleGrid):
                 self.cell_types[x, y] = all_types[i]
                 i += 1
 
-    # def move_agent_to_empty(self, agent):
-    #     # Get current agent position
-    #     x, y = agent.pos
-    #     old_cell_type = self.cell_types[x, y]
-        
-    #     # Find all empty cells
-    #     empty_cells = self.empties
-
-    #     # If there are no empty cells, do nothing
-    #     if len(empty_cells) == 0:
-    #         return
-
-    #     # Choose a random empty cell
-    #     new_pos = self.random.choice(list(empty_cells))  # convert set to list
-    #     new_x, new_y = new_pos
-    #     new_cell_type = self.cell_types[new_x, new_y]
-
-    #     # Move agent to the new position
-    #     self.remove_agent(agent)
-    #     agent.pos = new_pos
-    #     self.place_agent(agent, new_pos)
-
-    #     # Swap cell types to ensure they remain the same
-    #     self.cell_types[x, y], self.cell_types[new_x, new_y] = new_cell_type, old_cell_type
-
-
 class Schelling(mesa.Model):
     """
     Model class for the Schelling segregation model.
@@ -150,7 +124,6 @@ class Schelling(mesa.Model):
             {"x": lambda a: a.pos[0], "y": lambda a: a.pos[1]},
         )
         agent_name = 0
-
 
         for cell in self.grid.coord_iter():
             x, y = cell[1]
