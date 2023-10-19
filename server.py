@@ -41,7 +41,11 @@ model_params = {
     "density": mesa.visualization.Slider("Agent density", 0.8, 0.1, 1.0, 0.1),
     "minority_pc": mesa.visualization.Slider("Fraction minority", 0.2, 0.00, 1.0, 0.05),
     "homophily": mesa.visualization.Slider("Homophily", 3, 0, 8, 1),
+    "residential": mesa.visualization.Slider("Fraction residential", 0.4, 0, 1, 0.1),
+    "commercial": mesa.visualization.Slider("Fraction commercial", 0.3, 0, 1, 0.1),
+    "industrial": mesa.visualization.Slider("Fraction industrial", 0.3, 0, 1, 0.1)
 }
+
 
 server = mesa.visualization.ModularServer(
     Schelling,
