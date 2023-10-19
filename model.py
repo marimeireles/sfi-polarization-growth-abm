@@ -37,12 +37,12 @@ class SchellingAgent(mesa.Agent):
 
         # INTERACT! Turn ON/OFF for class to play a roll
         # Class conditions
-        if self.type == 0:
+        if self.type == 0: # Low class
             for neighbor in self.model.grid.iter_neighbors(self.pos, True):
                 self.happiness_index += self.homophily - 1
             if cell_type == ["residential", "commercial"]:
                 self.happiness_index += 2
-        elif self.type == 1:
+        elif self.type == 1: # Middle class
             for neighbor in self.model.grid.iter_neighbors(self.pos, True):
                 self.happiness_index += self.homophily - 1
             if cell_type == "industry":
