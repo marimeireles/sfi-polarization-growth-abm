@@ -42,8 +42,10 @@ def schelling_draw(agent):
         else:
             portrayal["Color"] = "#4ca64c"
 
-    return portrayal
+        portrayal["label"] += f"\nemployment:{agent.employment_status}"
+        portrayal["label"] += f"\nage:{agent.age}"
 
+    return portrayal
 
 canvas_element = mesa.visualization.CanvasGrid(schelling_draw, 20, 20, 500, 500)
 happy_chart = mesa.visualization.ChartModule([{"Label": "happy", "Color": "Black"}])
