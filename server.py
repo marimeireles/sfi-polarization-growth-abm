@@ -13,19 +13,34 @@ def get_happy_agents(model):
     """
     return f"Happy agents: {model.happy}"
 
+
 def get_total_num_employed_agents(model):
     """
     Display a text count of how many employed agents there are.
     """
-    employed_count = len([agent for agent in model.schedule.agents if agent.employment_status == 'employed'])
+    employed_count = len(
+        [
+            agent
+            for agent in model.schedule.agents
+            if agent.employment_status == "employed"
+        ]
+    )
     return f"Employed agents: {employed_count}"
+
 
 def get_total_num_unemployed_agents(model):
     """
     Display a text count of how many unemployed agents there are.
     """
-    unemployed_count = len([agent for agent in model.schedule.agents if agent.employment_status == 'unemployed'])
+    unemployed_count = len(
+        [
+            agent
+            for agent in model.schedule.agents
+            if agent.employment_status == "unemployed"
+        ]
+    )
     return f"Unemployed agents: {unemployed_count}"
+
 
 def get_total_num_low_class_agents(model):
     """
@@ -34,6 +49,7 @@ def get_total_num_low_class_agents(model):
     low_class_count = len([agent for agent in model.schedule.agents if agent.type == 0])
     return f"Low-class agents: {low_class_count}"
 
+
 def get_total_num_mid_class_agents(model):
     """
     Display a text count of how many middle-class agents there are.
@@ -41,11 +57,14 @@ def get_total_num_mid_class_agents(model):
     mid_class_count = len([agent for agent in model.schedule.agents if agent.type == 1])
     return f"Middle-class agents: {mid_class_count}"
 
+
 def get_total_num_high_class_agents(model):
     """
     Display a text count of how many high-class agents there are.
     """
-    high_class_count = len([agent for agent in model.schedule.agents if agent.type == 2])
+    high_class_count = len(
+        [agent for agent in model.schedule.agents if agent.type == 2]
+    )
     return f"High-class agents: {high_class_count}"
 
 
@@ -62,13 +81,18 @@ def schelling_draw(agent):
 
             if cell_type == "residential":
                 portrayal["label"] = "residential"
+                portrayal["Shape"] = "circle"
+                portrayal["r"] = 0.5
             elif cell_type == "commercial":
                 portrayal["label"] = "commercial"
+                portrayal["Shape"] = "rect"
+                portrayal["w"] = 1
+                portrayal["h"] = 1
             elif cell_type == "industrial":
                 portrayal["label"] = "industrial"
-
-            portrayal["Shape"] = "circle"
-            portrayal["r"] = 0.5
+                portrayal["Shape"] = "rect"
+                portrayal["w"] = 0.5
+                portrayal["h"] = 0.1
             portrayal["Layer"] = 1
 
             if agent.type == 0:

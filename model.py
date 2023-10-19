@@ -105,7 +105,9 @@ class SchellingAgent(mesa.Agent):
             if self.random.random() < self.probability_fired:
                 self.employment_status = "unemployed"
         else:
-            if self.random.random() < 0.85: # Magic number that keeps unemployment rate around 5%
+            if (
+                self.random.random() < 0.85
+            ):  # Magic number that keeps unemployment rate around 5%
                 self.employment_status = "employed"
 
 
