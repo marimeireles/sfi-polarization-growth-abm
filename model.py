@@ -3,37 +3,68 @@ import numpy as np
 import mesa
 
 class SchellingAgent(mesa.Agent):
-    """
-    Schelling segregation agent
-    """
-
-    def __init__(self, pos, model, agent_type, age=0):
-        """
-        Create a new Schelling agent.
-
-        Args:
-           unique_id: Unique identifier for the agent.
-           x, y: Agent initial location.
-           agent_type: Indicator for the agent's class.
-           age: Agent's age.
-        """
+    def __init__(self, pos, model, agent_type, age=0, employment_status='employed'):
         super().__init__(pos, model)
         self.pos = pos
-        self.type = agent_type
+        self.type = agent_type  # 0: low, 1: middle, 2: high
         self.age = age
+        self.employment_status = employment_status  # 'employed' or 'unemployed'
+        self.happiness_index = 0
+        self.steps_unemployed = 0  # To keep track of unemployment duration
+
+    def calculate_happiness(self):
+        self.happiness_index = 0  # Reset happiness index
+        x, y = self.pos
+
+        cell_type = self.model.grid.cell_types[x, y]
+
+        if self.employment_status == 'employed':
+            if self.type in [0, 1]:  # Low/Middle Class
+                if cell_type in ['commerce', 'industry']:
+                    self.happiness_index += 10
+            elif self.type == 2:  # High class
+                if cell_type == 'industry':
+                    self.happiness_index -= 20
+                for neighbor in self.model.grid.iter_neighbors(self.pos, True):
+                    if neighbor.type == 2:
+                        self.happiness_index += 5
+        elif self.employment_status == 'unemployed':
+            self.steps_unemployed += 1
+            if self.type == 0:  # Low class
+                if self.steps_unemployed > 5:
+                    self.model.grid.remove_agent(self)
+                    self.model.schedule.remove(self)
+                else:
+                    if cell_type == 'industry':
+                        self.happiness_index += 10
+            elif self.type == 1:  # Middle class
+                if self.steps_unemployed > 10:
+                    self.type = 0  # Descent to low class
+            elif self.type == 2:  # High class
+                if self.steps_unemployed > 20:
+                    self.type = 1  # Descent to middle class
+        # Age-based conditions
+        if self.age < 29:
+            if cell_type == 'commerce':
+                self.happiness_index += 5
+        elif self.age > 29 and self.type == 1:  # Middle class and older than 29
+            for neighbor in self.model.grid.iter_neighbors(self.pos, True):
+                if neighbor.type == 2:
+                    self.happiness_index += 5
+        elif self.age > 64:
+            # Doesn't change social class, just looks at neighbors (basic Schelling model)
+            for neighbor in self.model.grid.iter_neighbors(self.pos, True):
+                if neighbor.type == self.type:
+                    self.happiness_index += 1
 
     def step(self):
-        similar = 0
-        for neighbor in self.model.grid.iter_neighbors(self.pos, True):
-            # print(f"neighbor.type: {neighbor.type}, self.type: ")
-            if neighbor.type == self.type:
-                similar += 1
+        self.calculate_happiness()  # Calculate the new happiness index based on various factors
 
-        # If unhappy, move:
-        if similar < self.model.homophily:
-            self.model.grid.move_to_empty(self)
+        if self.happiness_index < self.model.happiness_threshold:
+            self.model.grid.move_to_empty(self)  # Move to a new, empty position
         else:
-            self.model.happy += 1
+            self.model.happy += 1  # Increment the total number of "happy" agents
+
 
 class EconClassGrid(mesa.space.SingleGrid):
     def __init__(self, width, height, torus, residential, commercial, industrial):
@@ -62,19 +93,20 @@ class EconClassGrid(mesa.space.SingleGrid):
                 i += 1
 
 
-
 class Schelling(mesa.Model):
     """
     Model class for the Schelling segregation model.
     """
 
-    def __init__(self, width=20, height=20, density=0.8, minority_pc=0.2, homophily=3, residential=0.4, commercial=0.3, industrial=0.3):
+    def __init__(self, width=20, height=20, density=0.8, chance_high_class=0.2, chance_middle_class=0.6, homophily=3, residential=0.4, commercial=0.3, industrial=0.3, happiness_threshold=5):
         """ """
         self.width = width
         self.height = height
         self.density = density
-        self.minority_pc = minority_pc
+        self.chance_high_class = chance_high_class
+        self.chance_middle_class = chance_middle_class
         self.homophily = homophily
+        self.happiness_threshold = happiness_threshold
 
         self.schedule = mesa.time.RandomActivation(self)
         self.grid = EconClassGrid(width, height, torus=True, residential=residential, commercial=commercial, industrial=industrial)
@@ -93,13 +125,14 @@ class Schelling(mesa.Model):
         for cell in self.grid.coord_iter():
             x, y = cell[1]
             if self.random.random() < self.density:
-                if self.random.random() < 0.1:  # 10% chance for high class
+                if self.random.random() < self.chance_high_class:
                     agent_type = 2
-                elif self.random.random() < self.minority_pc:
-                    agent_type = 1
                 else:
-                    agent_type = 0
-                
+                    if self.random.random() < self.chance_middle_class:
+                        agent_type = 1
+                    else:
+                        agent_type = 0
+
                 agent = SchellingAgent((x, y), self, agent_type)
                 self.grid.place_agent(agent, (x, y))
                 self.schedule.add(agent)
