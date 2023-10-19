@@ -13,7 +13,7 @@ class SchellingAgent(mesa.Agent):
         Args:
            unique_id: Unique identifier for the agent.
            x, y: Agent initial location.
-           agent_type: Indicator for the agent's type (minority=1, majority=0)
+           agent_type: Indicator for the agent's type
         """
         super().__init__(pos, model)
         self.pos = pos
@@ -22,6 +22,7 @@ class SchellingAgent(mesa.Agent):
     def step(self):
         similar = 0
         for neighbor in self.model.grid.iter_neighbors(self.pos, True):
+            # print(f"neighbor.type: {neighbor.type}, self.type: ")
             if neighbor.type == self.type:
                 similar += 1
 
@@ -63,14 +64,16 @@ class Schelling(mesa.Model):
         for cell in self.grid.coord_iter():
             x, y = cell[1]
             if self.random.random() < self.density:
-                agent_type = 1 if self.random.random() < self.minority_pc else 0
-
+                if self.random.random() < 0.1:  # 10% chance for high class
+                    agent_type = 2
+                elif self.random.random() < self.minority_pc:
+                    agent_type = 1
+                else:
+                    agent_type = 0
+                
                 agent = SchellingAgent((x, y), self, agent_type)
                 self.grid.place_agent(agent, (x, y))
                 self.schedule.add(agent)
-
-        self.running = True
-        self.datacollector.collect(self)
 
     def step(self):
         """

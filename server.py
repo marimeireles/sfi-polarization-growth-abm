@@ -17,12 +17,18 @@ def schelling_draw(agent):
         return
     portrayal = {"Shape": "circle", "r": 0.5, "Filled": "true", "Layer": 0}
 
+    # low class
     if agent.type == 0:
-        portrayal["Color"] = ["#FF0000", "#FF9999"]
-        portrayal["stroke_color"] = "#00FF00"
+        portrayal["Color"] = ["#e45e5e", "#D91919"]
+        portrayal["stroke_color"] = "#f3baba"
+    # middle class
+    elif agent.type == 1:
+        portrayal["Color"] = ["#ffc04c", "#FFA500"]
+        portrayal["stroke_color"] = "#ffdb99"
+    # high class
     else:
-        portrayal["Color"] = ["#0000FF", "#9999FF"]
-        portrayal["stroke_color"] = "#000000"
+        portrayal["Color"] = ["#4ca64c", "#008000"]
+        portrayal["stroke_color"] = "#99cc99"
     return portrayal
 
 
