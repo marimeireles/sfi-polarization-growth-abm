@@ -5,6 +5,7 @@ from model import Schelling
 
 from mesa.visualization.modules import CanvasGrid
 from mesa.visualization.ModularVisualization import ModularServer
+from mesa.visualization.UserParam import Choice
 
 
 def get_happy_agents(model):
@@ -104,8 +105,11 @@ def schelling_draw(agent):
             else:
                 portrayal["Color"] = "#4ca64c"
 
-            portrayal["label"] += f"\nemployment:{agent.employment_status}"
-            portrayal["label"] += f"\nage:{agent.age}"
+            if "label" in portrayal:
+                portrayal["label"] += f"\nemployment:{agent.employment_status}"
+                portrayal["label"] += f"\nage:{agent.age}"
+            else:
+                portrayal["label"] = "Empty cell"
 
     return portrayal
 
@@ -115,6 +119,11 @@ happy_chart = mesa.visualization.ChartModule([{"Label": "happy", "Color": "Black
 
 # TODO: make height/width variable
 model_params = {
+    "grid_init": Choice(
+        "Grid Initialization",
+        value="Random",
+        choices=["Random", "Clustered"],
+    ),
     "height": 20,
     "width": 20,
     "density": mesa.visualization.Slider("Agent density", 0.8, 0.1, 1.0, 0.1),

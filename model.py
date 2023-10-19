@@ -65,7 +65,7 @@ class SchellingAgent(mesa.Agent):
         if self.employment_status == "unemployed":
             self.steps_unemployed += 1
             # TODO: could add a class 4 dynamics for homeless people. Set a maximum of 1/83
-            # person is homeless and then some negative happiness index? :(
+            # (data from NYC 2023) person is homeless and then some negative happiness index? :(
             # if self.type == 0:  # Low class
             #     if self.steps_unemployed > self.max_unemployed_period_low_class:
             #         self.type = 4
@@ -81,7 +81,7 @@ class SchellingAgent(mesa.Agent):
         # INTERACT! Turn ON/OFF for age to play a roll
         # Age-based conditions
         if int(self.age) < 29:
-            if cell_type == "commerce":
+            if cell_type == "commercial":
                 self.happiness_index += 1
         elif int(self.age) > 29 and self.type == 1:  # Middle class and older than 29
             for neighbor in self.model.grid.iter_neighbors(self.pos, True):
@@ -115,28 +115,67 @@ class EconClassGrid(mesa.space.SingleGrid):
     def __init__(self, width, height, torus, residential, commercial, industrial):
         super().__init__(width, height, torus)
         self.cell_types = np.empty((width, height), dtype=object)
+        self.width = width
+        self.height = height
+        self.residential = residential
+        self.commercial = commercial
+        self.industrial = industrial
 
-        total_cells = width * height
-        num_residential = int(total_cells * residential)
-        num_commercial = int(total_cells * commercial)
-        num_industrial = int(total_cells * industrial)
+    def init_random(self):
+        total_cells = self.width * self.height
+        num_residential = int(total_cells * self.residential)
+        num_commercial = int(total_cells * self.commercial)
+        num_industrial = int(total_cells * self.industrial)
+        remaining = total_cells - (num_residential + num_commercial + num_industrial)
 
-        # Create a list with the right number of each type
         all_types = (
             ["residential"] * num_residential
             + ["commercial"] * num_commercial
             + ["industrial"] * num_industrial
+            + ["residential"] * remaining  # You can decide what to do with any remaining cells
         )
-
-        # Shuffle the list to randomize
         np.random.shuffle(all_types)
 
-        # Fill in the grid
         i = 0
-        for x in range(width):
-            for y in range(height):
+        for x in range(self.width):
+            for y in range(self.height):
                 self.cell_types[x, y] = all_types[i]
                 i += 1
+
+    def init_clusters(self):
+        # TODO: 404 GET /local/custom/undefined (127.0.0.1) 1.07ms
+        # I think this is triggering this error
+        # Some cells are "Empty" and this software doesn't like that
+        cluster_size = 5
+        total_cells = self.width * self.height
+
+        num_residential = int(total_cells * self.residential)
+        num_commercial = int(total_cells * self.commercial)
+        num_industrial = int(total_cells * self.industrial)
+
+        remaining_cells = {
+            "residential": num_residential,
+            "commercial": num_commercial,
+            "industrial": num_industrial,
+        }
+
+        for x in range(0, self.width, cluster_size):
+            for y in range(0, self.height, cluster_size):
+                cell_type = np.random.choice(["residential", "commercial", "industrial"])
+
+                if remaining_cells[cell_type] <= 0:
+                    continue
+
+                for dx in range(cluster_size):
+                    for dy in range(cluster_size):
+                        if x + dx < self.width and y + dy < self.height:
+                            self.cell_types[x + dx, y + dy] = cell_type
+                            remaining_cells[cell_type] -= 1
+                            if remaining_cells[cell_type] <= 0:
+                                break
+                    if remaining_cells[cell_type] <= 0:
+                        break
+
 
 
 class Schelling(mesa.Model):
@@ -156,7 +195,9 @@ class Schelling(mesa.Model):
         commercial=0.3,
         industrial=0.3,
         happiness_threshold=15,
+        grid_init="Random",
     ):
+        self.grid_init = grid_init
         self.width = width
         self.height = height
         self.density = density
@@ -175,6 +216,11 @@ class Schelling(mesa.Model):
             industrial=industrial,
         )
 
+        if self.grid_init == "Random":
+            self.grid.init_random()
+        elif self.grid_init == "Clustered":
+            self.grid.init_clusters()
+
         self.happy = 0
         self.datacollector = mesa.DataCollector(
             {"happy": "happy"},  # Model-level count of happy agents
@@ -185,7 +231,7 @@ class Schelling(mesa.Model):
         for cell in self.grid.coord_iter():
             x, y = cell[1]
 
-            # Assign class
+            # Assign agent's class
             if self.random.random() < self.density:
                 if self.random.random() < self.chance_high_class:
                     agent_type = 2
@@ -207,7 +253,7 @@ class Schelling(mesa.Model):
                 self.grid.place_agent(agent, (x, y))
                 self.schedule.add(agent)
 
-                # Assign age
+                # Assign agent's age
                 # Define the age groups and their corresponding probabilities. Data for NYC 2023
                 age_groups = ["24", "34", "44", "54", "59", "64", "74", "84", "85"]
                 probabilities = [
