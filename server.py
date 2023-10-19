@@ -13,6 +13,41 @@ def get_happy_agents(model):
     """
     return f"Happy agents: {model.happy}"
 
+def get_total_num_employed_agents(model):
+    """
+    Display a text count of how many employed agents there are.
+    """
+    employed_count = len([agent for agent in model.schedule.agents if agent.employment_status == 'employed'])
+    return f"Employed agents: {employed_count}"
+
+def get_total_num_unemployed_agents(model):
+    """
+    Display a text count of how many unemployed agents there are.
+    """
+    unemployed_count = len([agent for agent in model.schedule.agents if agent.employment_status == 'unemployed'])
+    return f"Unemployed agents: {unemployed_count}"
+
+def get_total_num_low_class_agents(model):
+    """
+    Display a text count of how many low-class agents there are.
+    """
+    low_class_count = len([agent for agent in model.schedule.agents if agent.type == 0])
+    return f"Low-class agents: {low_class_count}"
+
+def get_total_num_mid_class_agents(model):
+    """
+    Display a text count of how many middle-class agents there are.
+    """
+    mid_class_count = len([agent for agent in model.schedule.agents if agent.type == 1])
+    return f"Middle-class agents: {mid_class_count}"
+
+def get_total_num_high_class_agents(model):
+    """
+    Display a text count of how many high-class agents there are.
+    """
+    high_class_count = len([agent for agent in model.schedule.agents if agent.type == 2])
+    return f"High-class agents: {high_class_count}"
+
 
 def schelling_draw(agent):
     """
@@ -21,31 +56,35 @@ def schelling_draw(agent):
     portrayal = {"Filled": "true", "Layer": 0}
 
     if agent is not None:
-        x, y = agent.pos
-        cell_type = agent.grid.cell_types[x][y]
+        if agent.pos is not None:
+            x, y = agent.pos
+            cell_type = agent.grid.cell_types[x][y]
 
-        if cell_type == "residential":
-            portrayal["label"] = "residential"
-        elif cell_type == "commercial":
-            portrayal["label"] = "commercial"
-        elif cell_type == "industrial":
-            portrayal["label"] = "industrial"
+            if cell_type == "residential":
+                portrayal["label"] = "residential"
+            elif cell_type == "commercial":
+                portrayal["label"] = "commercial"
+            elif cell_type == "industrial":
+                portrayal["label"] = "industrial"
 
-        portrayal["Shape"] = "circle"
-        portrayal["r"] = 0.5
-        portrayal["Layer"] = 1
+            portrayal["Shape"] = "circle"
+            portrayal["r"] = 0.5
+            portrayal["Layer"] = 1
 
-        if agent.type == 0:
-            portrayal["Color"] = "#e45e5e"
-        elif agent.type == 1:
-            portrayal["Color"] = "#ffc04c"
-        else:
-            portrayal["Color"] = "#4ca64c"
+            if agent.type == 0:
+                portrayal["Color"] = "#e45e5e"
+            elif agent.type == 1:
+                portrayal["Color"] = "#ffc04c"
+            elif agent.type == 4:
+                portrayal["Color"] = "black"
+            else:
+                portrayal["Color"] = "#4ca64c"
 
-        portrayal["label"] += f"\nemployment:{agent.employment_status}"
-        portrayal["label"] += f"\nage:{agent.age}"
+            portrayal["label"] += f"\nemployment:{agent.employment_status}"
+            portrayal["label"] += f"\nage:{agent.age}"
 
     return portrayal
+
 
 canvas_element = mesa.visualization.CanvasGrid(schelling_draw, 20, 20, 500, 500)
 happy_chart = mesa.visualization.ChartModule([{"Label": "happy", "Color": "Black"}])
@@ -69,7 +108,16 @@ model_params = {
 
 server = mesa.visualization.ModularServer(
     Schelling,
-    [canvas_element, get_happy_agents, happy_chart],
+    [
+        canvas_element,
+        get_happy_agents,
+        get_total_num_employed_agents,
+        get_total_num_unemployed_agents,
+        get_total_num_low_class_agents,
+        get_total_num_mid_class_agents,
+        get_total_num_high_class_agents,
+        happy_chart,
+    ],
     "Schelling",
     model_params,
 )
