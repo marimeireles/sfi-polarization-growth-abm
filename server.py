@@ -1,5 +1,12 @@
+from collections import defaultdict
+
 import mesa
 from model import Schelling
+
+from mesa.visualization.modules import CanvasGrid
+from mesa.visualization.ModularVisualization import ModularServer
+
+
 
 
 def get_happy_agents(model):
@@ -15,20 +22,20 @@ def schelling_draw(agent):
     """
     if agent is None:
         return
+    x, y = agent.pos
+    cell_type = agent.grid.cell_types[x][y]
     portrayal = {"Shape": "circle", "r": 0.5, "Filled": "true", "Layer": 0}
 
-    # low class
-    if agent.type == 0:
-        portrayal["Color"] = ["#e45e5e", "#D91919"]
-        portrayal["stroke_color"] = "#f3baba"
-    # middle class
-    elif agent.type == 1:
-        portrayal["Color"] = ["#ffc04c", "#FFA500"]
-        portrayal["stroke_color"] = "#ffdb99"
-    # high class
-    else:
-        portrayal["Color"] = ["#4ca64c", "#008000"]
-        portrayal["stroke_color"] = "#99cc99"
+    if cell_type == 'residential':
+        portrayal["Color"] = ["#FF0000", "#FF9999"]
+        portrayal["stroke_color"] = "#00FF00"
+    elif cell_type == 'commercial':
+        portrayal["Color"] = ["#0000FF", "#9999FF"]
+        portrayal["stroke_color"] = "#000000"
+    elif cell_type == 'industrial':
+        portrayal["Color"] = ["green", "#9999FF"]
+        portrayal["stroke_color"] = "#000000"
+        
     return portrayal
 
 
@@ -46,7 +53,6 @@ model_params = {
     "commercial": mesa.visualization.Slider("Fraction commercial", 0.3, 0, 1, 0.1),
     "industrial": mesa.visualization.Slider("Fraction industrial", 0.3, 0, 1, 0.1)
 }
-
 
 server = mesa.visualization.ModularServer(
     Schelling,
